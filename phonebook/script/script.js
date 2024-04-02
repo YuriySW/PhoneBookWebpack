@@ -269,15 +269,6 @@ const data = [
         target.closest('.contact').remove();
       }
     });
-
-    setTimeout(() => {
-      const contact = createRow({
-        name: 'Максим',
-        surname: 'Лескин',
-        phone: '001',
-      });
-      list.append(contact);
-    }, 2000);
   };
 
   window.phoneBookInit = init;
