@@ -144,7 +144,7 @@ const data = [
         text: 'Добваить',
       },
       {
-        className: 'btn btn-danger',
+        className: 'btn btn-danger btn-cancel',
         type: 'reset',
         text: 'отмена',
       },
@@ -253,7 +253,8 @@ const data = [
 
     formOverlay.addEventListener('click', (e) => {
       const target = e.target;
-      if (target === formOverlay || target.closest('.close')) {
+
+      if (target === formOverlay || target.closest('.close') || target.closest('.btn-cancel')) {
         formOverlay.classList.remove('is-visible');
       }
     });
