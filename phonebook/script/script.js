@@ -24,6 +24,10 @@ const data = [
 ];
 
 {
+  const addContactData = (contact) => {
+    data.push(contact);
+  };
+
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -126,15 +130,15 @@ const data = [
         <h2 class="form-title"></h2>
         <div class="form-group">
         <label class="form-label" for="name">Имя</label>
-        <input class="form-input" name="name" id="name" type="text" requred>
+        <input class="form-input" name="name" id="name" type="text" required>
         </div>
         <div class="form-group">
         <label class="form-label" for="surname">Фамилия</label>
-      <input class="form-input" name="surname" id="surname" type="text" requred>
+      <input class="form-input" name="surname" id="surname" type="text" required>
       </div>
      <div class="form-group">
      <label class="form-label" for="phone">Телефон</label>
-     <input class="form-input" name="phone" id="phone" type="number" requred>
+     <input class="form-input" name="phone" id="phone" type="number" required>
      </div> `
     );
     const buttonGroup = createButtonsGroup([
@@ -179,10 +183,10 @@ const data = [
     ]);
 
     const table = createTable();
-    const form = createForm();
+    const {form, overlay} = createForm();
 
     header.headerContainer.append(logo);
-    main.mainContainer.append(buttonGroup.btnWrapper, table, form.overlay);
+    main.mainContainer.append(buttonGroup.btnWrapper, table, overlay);
 
     app.append(header, main, footer);
 
@@ -191,8 +195,8 @@ const data = [
       logo,
       btnAdd: buttonGroup.btns[0],
       btnDel: buttonGroup.btns[1],
-      formOverlay: form.overlay,
-      form: form.form,
+      formOverlay: overlay,
+      form,
     };
   };
 
@@ -237,28 +241,31 @@ const data = [
     });
   };
 
-  const init = (selectorApp, title) => {
-    const app = document.querySelector(selectorApp);
-    const phonebook = renderPhoneBook(app, title);
-    const {list, logo, btnAdd, formOverlay, form, btnDel} = phonebook;
-
-    // Функционал
-    const allRow = renderContacts(list, data);
-
-    hoverRow(allRow, logo);
-
-    btnAdd.addEventListener('click', () => {
+  const modalControl = (btnAdd, formOverlay) => {
+    const openModal = () => {
       formOverlay.classList.add('is-visible');
-    });
+    };
+
+    const closeModal = () => {
+      formOverlay.classList.remove('is-visible');
+    };
+
+    btnAdd.addEventListener('click', openModal);
 
     formOverlay.addEventListener('click', (e) => {
       const target = e.target;
 
       if (target === formOverlay || target.closest('.close') || target.closest('.btn-cancel')) {
-        formOverlay.classList.remove('is-visible');
+        closeModal();
       }
     });
 
+    return {
+      closeModal,
+    };
+  };
+
+  const deleteControl = (btnDel, list) => {
     btnDel.addEventListener('click', () => {
       document.querySelectorAll('.delete').forEach((del) => {
         del.classList.toggle('is-visible');
@@ -270,6 +277,38 @@ const data = [
         target.closest('.contact').remove();
       }
     });
+  };
+
+  const addContactPage = (contact, list) => {
+    list.append(createRow(contact));
+  };
+
+  const formControl = (form, list, closeModal) => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      const newContact = Object.fromEntries(formData);
+      addContactPage(newContact, list);
+      addContactData(newContact);
+
+      form.reset();
+      closeModal();
+    });
+  };
+
+  const init = (selectorApp, title) => {
+    const app = document.querySelector(selectorApp);
+
+    const {list, logo, btnAdd, formOverlay, form, btnDel} = renderPhoneBook(app, title);
+
+    // Функционал
+    const allRow = renderContacts(list, data);
+    const {closeModal} = modalControl(btnAdd, formOverlay);
+
+    hoverRow(allRow, logo);
+    deleteControl(btnDel, list);
+    formControl(form, list, closeModal);
   };
 
   window.phoneBookInit = init;
