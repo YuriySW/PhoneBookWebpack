@@ -1,33 +1,6 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Иван',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Игорь',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Семён',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
-
 {
-  const addContactData = (contact) => {
-    data.push(contact);
-  };
-
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -144,13 +117,13 @@ const data = [
     const buttonGroup = createButtonsGroup([
       {
         className: 'btn btn-primary mr-3',
-        type: 'submint',
-        text: 'Добваить',
+        type: 'submit',
+        text: 'Добавить',
       },
       {
         className: 'btn btn-danger btn-cancel',
         type: 'reset',
-        text: 'отмена',
+        text: 'Отмена',
       },
     ]);
 
@@ -173,7 +146,7 @@ const data = [
       {
         className: 'btn btn-primary mr-3 js-add',
         type: 'button',
-        text: 'Добваить',
+        text: 'Добавить',
       },
       {
         className: 'btn btn-danger',
@@ -220,13 +193,8 @@ const data = [
 
     tdPhone.append(phoneLink);
     tr.append(tdDel, tdName, tdSurname, tdPhone);
-    return tr;
-  };
 
-  const renderContacts = (elem) => {
-    const allRow = data.map(createRow);
-    elem.append(...allRow);
-    return allRow;
+    return tr;
   };
 
   const hoverRow = (allRow, logo) => {
@@ -265,6 +233,10 @@ const data = [
     };
   };
 
+  const removeStorage = (keyLocal) => {
+    localStorage.removeItem(keyLocal.toString());
+  };
+
   const deleteControl = (btnDel, list) => {
     btnDel.addEventListener('click', () => {
       document.querySelectorAll('.delete').forEach((del) => {
@@ -274,6 +246,9 @@ const data = [
     list.addEventListener('click', (e) => {
       const target = e.target;
       if (target.closest('.del-icon')) {
+        const contactRow = target.closest('.contact');
+        const phoneNumberCell = contactRow.querySelector('td:last-child a').textContent;
+        removeStorage(phoneNumberCell);
         target.closest('.contact').remove();
       }
     });
@@ -283,17 +258,40 @@ const data = [
     list.append(createRow(contact));
   };
 
+  const getStorage = (keyLocal) => {
+    const data = localStorage.getItem(keyLocal);
+
+    return data ? JSON.parse(data) : [];
+  };
+
+  const setStorage = (keyLocal, newObj) => {
+    const getStorageResult = getStorage(keyLocal.toString());
+
+    getStorageResult.push(newObj);
+
+    localStorage.setItem(keyLocal.toString(), JSON.stringify(getStorageResult));
+  };
+
   const formControl = (form, list, closeModal) => {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
 
       const newContact = Object.fromEntries(formData);
+      const contactKey = newContact.phone;
+
       addContactPage(newContact, list);
-      addContactData(newContact);
+      setStorage(contactKey, newContact);
 
       form.reset();
       closeModal();
+    });
+  };
+
+  const addContactLocal = (list) => {
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      getStorage(key).forEach((contact) => addContactPage(contact, list));
     });
   };
 
@@ -303,10 +301,10 @@ const data = [
     const {list, logo, btnAdd, formOverlay, form, btnDel} = renderPhoneBook(app, title);
 
     // Функционал
-    const allRow = renderContacts(list, data);
+    addContactLocal(list);
     const {closeModal} = modalControl(btnAdd, formOverlay);
 
-    hoverRow(allRow, logo);
+    hoverRow(list.querySelectorAll('.contact'), logo);
     deleteControl(btnDel, list);
     formControl(form, list, closeModal);
   };
