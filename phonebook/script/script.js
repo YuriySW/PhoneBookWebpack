@@ -291,7 +291,10 @@
   const addContactLocal = (list) => {
     const keys = Object.keys(localStorage);
     keys.forEach((key) => {
-      getStorage(key).forEach((contact) => addContactPage(contact, list));
+      const contacts = getStorage(key);
+      if (Array.isArray(contacts)) {
+        contacts.forEach((contact) => addContactPage(contact, list));
+      }
     });
   };
 
