@@ -173,7 +173,7 @@
     };
   };
 
-  const createRow = ({name: firstName, surname, phone}) => {
+  const createRow = ({name: firstName, surname, phone}, keyLocal) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
     const tdDel = document.createElement('td');
@@ -190,7 +190,7 @@
     phoneLink.href = `tel:${phone}`;
     phoneLink.textContent = phone;
     tr.phoneLink = phoneLink;
-
+    tr.dataset.key = keyLocal;
     tdPhone.append(phoneLink);
     tr.append(tdDel, tdName, tdSurname, tdPhone);
 
@@ -234,7 +234,7 @@
   };
 
   const removeStorage = (keyLocal) => {
-    localStorage.removeItem(keyLocal.toString());
+    localStorage.removeItem(keyLocal);
   };
 
   const deleteControl = (btnDel, list) => {
@@ -247,21 +247,25 @@
       const target = e.target;
       if (target.closest('.del-icon')) {
         const contactRow = target.closest('.contact');
-        const phoneNumberCell = contactRow.querySelector('td:last-child a').textContent;
-        removeStorage(phoneNumberCell);
+        const key = contactRow.dataset.key;
+        removeStorage(key);
         target.closest('.contact').remove();
       }
     });
   };
 
-  const addContactPage = (contact, list) => {
-    list.append(createRow(contact));
+  const addContactPage = (contact, list, keyLocal) => {
+    list.append(createRow(contact, keyLocal));
   };
 
   const getStorage = (keyLocal) => {
     const data = localStorage.getItem(keyLocal);
 
-    return data ? JSON.parse(data) : [];
+    try {
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
   };
 
   const setStorage = (keyLocal, newObj) => {
@@ -272,13 +276,25 @@
     localStorage.setItem(keyLocal.toString(), JSON.stringify(getStorageResult));
   };
 
+  const generateRandomKey = () => {
+    let randomKey;
+    const keys = Object.keys(localStorage);
+
+    do {
+      randomKey = Math.random().toString(36).substr(2, 9);
+    } while (keys.includes(randomKey));
+
+    return randomKey;
+  };
+
   const formControl = (form, list, closeModal) => {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
 
       const newContact = Object.fromEntries(formData);
-      const contactKey = newContact.phone;
+
+      const contactKey = generateRandomKey();
 
       addContactPage(newContact, list);
       setStorage(contactKey, newContact);
@@ -293,7 +309,7 @@
     keys.forEach((key) => {
       const contacts = getStorage(key);
       if (Array.isArray(contacts)) {
-        contacts.forEach((contact) => addContactPage(contact, list));
+        contacts.forEach((contact) => addContactPage(contact, list, key));
       }
     });
   };
