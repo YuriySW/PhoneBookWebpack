@@ -269,11 +269,16 @@
   };
 
   const setStorage = (keyLocal, newObj) => {
-    const getStorageResult = getStorage(keyLocal.toString());
-
-    getStorageResult.push(newObj);
-
-    localStorage.setItem(keyLocal.toString(), JSON.stringify(getStorageResult));
+    if (
+      typeof newObj === 'object' &&
+      newObj.hasOwnProperty('name') &&
+      newObj.hasOwnProperty('surname') &&
+      newObj.hasOwnProperty('phone')
+    ) {
+      const getStorageResult = getStorage(keyLocal.toString());
+      getStorageResult.push(newObj);
+      localStorage.setItem(keyLocal.toString(), JSON.stringify(getStorageResult));
+    }
   };
 
   const generateRandomKey = () => {
