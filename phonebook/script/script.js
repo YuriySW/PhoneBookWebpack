@@ -246,12 +246,7 @@
   };
 
   const setStorage = (id, newObj) => {
-    if (
-      typeof newObj === 'object' &&
-      newObj.hasOwnProperty('name') &&
-      newObj.hasOwnProperty('surname') &&
-      newObj.hasOwnProperty('phone')
-    ) {
+    if (typeof newObj === 'object' && newObj.name && newObj.surname && newObj.phone) {
       try {
         const currentData = getStorage(id);
         currentData.push(newObj);
