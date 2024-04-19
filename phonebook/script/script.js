@@ -1,6 +1,8 @@
 'use strict';
 
 {
+  let contactCounter = 0;
+
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -233,8 +235,85 @@
     };
   };
 
-  const removeStorage = (keyLocal) => {
-    localStorage.removeItem(keyLocal);
+  const getStorage = (id) => {
+    const data = localStorage.getItem('contacts');
+    try {
+      const parsedData = data ? JSON.parse(data) : {}; //
+      return parsedData[id] ? parsedData[id] : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const setStorage = (id, newObj) => {
+    if (
+      typeof newObj === 'object' &&
+      newObj.hasOwnProperty('name') &&
+      newObj.hasOwnProperty('surname') &&
+      newObj.hasOwnProperty('phone')
+    ) {
+      try {
+        const currentData = getStorage(id);
+        currentData.push(newObj);
+
+        localStorage.setItem(
+          'contacts',
+          JSON.stringify({...JSON.parse(localStorage.getItem('contacts')), [id]: currentData})
+        );
+      } catch {
+        return [];
+      }
+    }
+  };
+
+  const addContactPage = (contact, list, id) => {
+    list.append(createRow(contact, id));
+  };
+
+  const generateRandomKey = () => {
+    let key;
+    do {
+      key = (++contactCounter).toString();
+    } while (localStorage.getItem('contacts') && JSON.parse(localStorage.getItem('contacts'))[key]);
+    return key;
+  };
+
+  const formControl = (form, list, closeModal) => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      const name = formData.get('name');
+      const surname = formData.get('surname');
+      const phone = formData.get('phone');
+
+      const newContact = {
+        name,
+        surname,
+        phone,
+      };
+
+      const id = generateRandomKey();
+
+      setStorage(id, newContact);
+      addContactPage(newContact, list, id);
+
+      closeModal();
+      form.reset();
+    });
+  };
+
+  const addContactLocal = (list) => {
+    const contacts = JSON.parse(localStorage.getItem('contacts') || '{}');
+    Object.keys(contacts).forEach((id) => {
+      contacts[id].forEach((contact) => addContactPage(contact, list, id));
+    });
+  };
+
+  const removeStorage = (id) => {
+    const contacts = JSON.parse(localStorage.getItem('contacts') || '{}');
+    delete contacts[id];
+    localStorage.setItem('contacts', JSON.stringify(contacts));
   };
 
   const deleteControl = (btnDel, list) => {
@@ -249,72 +328,7 @@
         const contactRow = target.closest('.contact');
         const key = contactRow.dataset.key;
         removeStorage(key);
-        target.closest('.contact').remove();
-      }
-    });
-  };
-
-  const addContactPage = (contact, list, keyLocal) => {
-    list.append(createRow(contact, keyLocal));
-  };
-
-  const getStorage = (keyLocal) => {
-    const data = localStorage.getItem(keyLocal);
-
-    try {
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const setStorage = (keyLocal, newObj) => {
-    if (
-      typeof newObj === 'object' &&
-      newObj.hasOwnProperty('name') &&
-      newObj.hasOwnProperty('surname') &&
-      newObj.hasOwnProperty('phone')
-    ) {
-      const getStorageResult = getStorage(keyLocal.toString());
-      getStorageResult.push(newObj);
-      localStorage.setItem(keyLocal.toString(), JSON.stringify(getStorageResult));
-    }
-  };
-
-  const generateRandomKey = () => {
-    let randomKey;
-    const keys = Object.keys(localStorage);
-
-    do {
-      randomKey = Math.random().toString(36).substr(2, 9);
-    } while (keys.includes(randomKey));
-
-    return randomKey;
-  };
-
-  const formControl = (form, list, closeModal) => {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-
-      const newContact = Object.fromEntries(formData);
-
-      const contactKey = generateRandomKey();
-
-      addContactPage(newContact, list);
-      setStorage(contactKey, newContact);
-
-      form.reset();
-      closeModal();
-    });
-  };
-
-  const addContactLocal = (list) => {
-    const keys = Object.keys(localStorage);
-    keys.forEach((key) => {
-      const contacts = getStorage(key);
-      if (Array.isArray(contacts)) {
-        contacts.forEach((contact) => addContactPage(contact, list, key));
+        contactRow.remove();
       }
     });
   };
